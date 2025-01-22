@@ -1,0 +1,933 @@
+---
+title: "Lošimų teorija"
+subtitle: "Namų darbai Nr. 2"
+date: "`r Sys.Date()`"
+author: 
+  - name: "Evelina Vaitkevičiūtė <e.vaitkeviciute1@gmail.com>"
+    avatar: ./logo/1662037951892.jpg
+    title: DM 4 k. 1 gr. (Nr. 2110930)
+output:
+  readthedown::readthedown:
+    highlight: kate
+    fig_width: 14
+    fig_height: 8
+    number_sections: false
+    code_folding: show
+    logo: ./logo/MIF.png
+    css:
+    - https://use.fontawesome.com/releases/v5.15.4/css/all.css
+    - style.css
+---
+
+```{r setup, include=FALSE}
+## Global options
+knitr::opts_chunk$set(cache = TRUE)
+library(reticulate)
+use_python("C:/Users/eveli/python3.11/python.exe")
+
+require(ggplot2)
+require(dplyr)
+require(glue)
+require(kableExtra)
+
+```
+
+```{r, echo=FALSE, results = 'hide', warning=FALSE}
+# Kalbos nustatymai
+sessionInfo()
+Sys.setlocale("LC_ALL","Lithuanian")
+```
+
+Darbui įsidiegiamos reikalingos R programinės įrangos bibliotekos `rgamer`, `EvolutionaryGames`, `GameTheory` ir Python programinės įrangos bibliotekos `numpy`, `nashpy`.
+
+```{r libs, echo = FALSE, warning=FALSE, message=FALSE}
+#install.packages("gtree", repos = c("https://skranz-repo.github.io/drat/",getOption("repos")))
+#remotes::install_github("yukiyanai/rgamer")
+library(rgamer)
+library(gtree)
+```
+
+# 4.8 užduotis. Dalinės informacijos lošimai
+
+Aloyzas ir Bronius varžosi mineralinio vandens rinkoje, kurios netiesioginė paklausos funkcija (tiesioginė – kuomet kiekis $\left( Q \right)$ priklauso nuo kainos $\left( P \right)$) yra $P\left( Q \right) = \text{max}\left\{ M_{i}-Q,0 \right\}$, kai $Q = q_{A}+q_{B}$. Abiejų firmų ribinės sąnaudos yra pastovios ir lygios $1$. Rinka gali būti dviejų tipų $M_{i} = 22$ arba $8$. Aloyzas stebi rinkos tipą ir eina pirmas, tuomet į tai atsako Bronius, kuris rinkos tipo nežino.
+
+1. Pateikite lošimą kaip signalizavimo lošimą $G_{S}$
+2. Raskite atskiriamąją pusiausvyrą
+3. Ar gali būti apjungiamoji pusiausvyra? Jei taip, raskite ją.
+
+> **Signalizavimo lošimai** – lošimai tarp labiau informuoto lošėjo – **siuntėjo**, kuris turi privačią informaciją ir eina pirmas, ir mažiau informuoto antro lošėjo – **gavėjo**, kurio sprendimai priklauso nuo siunčiamo **signalo** (pranešimo). \
+Tarkime, kad dalyvauja du lošėjai $i = 1,2$. \
+>
+* Gamta {0} pasirenka $t$ tipą iš tipų erdvės $T$;
+* 1-asis lošėjas žino savo tipą $t$ ir renkasi pranešimą $m \in \mathcal{M}$;
+* 2-asis stebi pranešimą $m$ ir vykdo veiksmą $a \in \mathcal{A}$.
+>
+Svarbu dinamika, kas po ko eina, o strateginės formos lošimas nusakomas: \
+$G_{s} = \left\{ \{1, 2\}, T, P(\cdot), \left\{\mathcal{M}, \mathcal{A}\right\}, u(\cdot), v(\cdot) \right\}$ \
+čia \
+$\{1, 2\}$ yra lošėjų aibė, \
+$T$ yra tipų erdvė, \
+$P(\cdot)$ yra tikimybių pasiskirstymas \
+$\left\{\mathcal{M}, \mathcal{A}\right\}$ yra pranešimų erdvė $\mathcal{M}$ ir veiksmų erdvė $\mathcal{A}$ \
+$u(\cdot), v(\cdot)$ yra išlošiai.
+
+## Duopolis (angl. *Duopoly*) kaip signalizavimo lošimas
+
+Pirmiausia, pateiksime lošimą kaip signalizavimo lošimą.
+
+Šiame signalizavimo lošime, Aloyzas (pirmasis rinkos dalyvis) turi privačios informacijos apie rinkos dydį, kuris gali būti $8$ arba $22$. Aloyzas stebi rinkos tipą ir eina pirmas (pasirenka $q_{A}$), taip siunčia signalą apie rinką Broniui. Bronius (antrasis rinkos dalyvis) stebi $q_{A}$, bet tiesiogiai rinkos tipo $M$ nežino ir turi jį nustatyti.
+Ribinės sąnaudos: $d = c_{A} = c_{B} = 1$.
+
+$G_{s} = \left\{ \{A, B\}, T, P(\cdot), \left\{\mathcal{M}, \mathcal{A}\right\}, u(\cdot), v(\cdot) \right\}$
+
+1. Šio lošimo **lošėjai**: Aloyzas ir Bronius, t. y. lošėjų aibė $\mathcal{N} = \left\{ A,B \right\}$. \
+
+2. **Tipų erdvė $T$**: $T = \left\{ M_{H}, M_{L} \right\}$, \
+čia $M_H = 22$ yra aukštos vertės rinka, o $M_L = 8$ yra žemos vertės rinka. \
+Tik Aloyzas žino tikrąjį rinkos tipą.
+
+3. **Tikimybių** pasiskirstymas $P(\cdot)$: \
+Tikimybė, kad rinka yra aukštos vertės yra $P(M_{H}) = p$, o žemos vertės $P(M_{L}) = 1-p$ \
+Šias tikimybes žino abu lošėjai.
+
+4. **Strategijos $\gamma_{A}, \gamma_{B}$**: \
+Aloyzas pasirenka gamybos kiekį $q_{A}$, priklausomai nuo rinkos tipo $M_{i}$. \
+$\gamma_{A}: T \to \mathcal{M} = \Delta M$,\
+Bronius, stebėdamas $q_{A}$, pasirenka gamybos kiekį $q_{B}$, stengdamasis maksimizuoti savo išlošį. \
+$\gamma_{B}: M \to \mathcal{A} = \Delta A$ \
+Aloyzo veiksmai: $M = \left\{ q_{A} \ge 0\right\}$, Aloyzas pasirenka savo gamybos kiekį $q_{A}$. \
+Broniaus veiksmai: $A = \left\{ q_{B} \ge 0\right\}$, Bronius pasirenka savo gamybos kiekį $q_{B}$, remdamasis Aloyzo signalu.
+
+5. **Informacija**: \
+Aloyzas žino rinkos tipą $M_{i}$. \
+Bronius stebi $q_{A}$, bet ne $M_{i}$. Bronius nestebi tipo, tačiau turi lūkesčius $\mu(M_{i}|q_{A})$ apie rinkos tipą, remdamasis $q_{A}$.
+
+6. **Išlošiai** $u(\cdot), v(\cdot)$. $u,v: T \times M \times A \to \mathbb{R}$ \
+Tuomet, $\pi_{i} = P(Q)q_{i} - c_{i}q_{i}$, čia $i = A,B$ ir $c_{i} = 1$ (ribinės sąnaudos). \
+Aloyzo išlošių funkcija: \
+$u(q_{A}, q_{B}, M) = P(Q)q_{A} - q_{A}$, čia $P\left( Q \right) = \text{max}\left\{ M_{i}-Q,0 \right\}$, kai $Q = q_{A}+q_{B}$\
+Broniaus išlošių funkcija: \
+$v(q_{A}, q_{B}, M) = P(Q)q_{B} - q_{B}$, čia $P\left( Q \right) = \text{max}\left\{ M_{i}-Q,0 \right\}$, kai $Q = q_{A}+q_{B}$
+
+## Signalizavimo pusiausvyra (SigP)
+> Strateginis profilis $\left( \gamma_{1}^{*}, \gamma_{2}^{*} \right)$ signalizavimo lošime $G_{S}$ yra signalizavimo pusiausvyra (SigP), jei $\exists \mu^{*} = \left\{ \mu^{*}\left( m \right) \right\}_{m\in \mathcal{M}}$:
+>
+* Pranešimai yra optimalūs $\forall t\in T, \forall \nu\in \mathcal{M}$
+* 2 lošėjas nestebi tipo ir $\forall m\in M, \forall \alpha\in \mathcal{A}$
+* Jei pranešimas $m$ galimas, tada 2-ojo lošėjo lūkesčiai apie pirmojo lošėjo tipą stebint $m$, turi būti apskaičiuojami pagal Bajeso taisyklę.
+* Jei pranešimas $m$ - neįmanomas, tada 2-ojo lošėjo lūkesčiai apie 1-ojo lošėjo tipą yra laisvai parenkami. Tai vadinama – silpnybė.
+
+## Atskiriamoji pusiausvyra
+Kad rastume atskiriamąją pusiausvyrą, turime nustatyti $q_{A} (8)$ ir $q_{A} (22)$, kuriuos Aloyzas pasirinks kiekvienu rinkos atveju.
+
+Primename, kad paklausos funkcija:
+$P\left( Q \right) = \text{max}\left\{ M_{i}-Q,0 \right\}$, kai $Q = q_{A}+q_{B}$
+
+**Išlošių funkcijos**: \
+Aloyzo išlošiai: $\pi_{A} = P(Q) q_{A} - q_{A} = (M_{i} - q_{A} - q_{B})q_{A} - q_{A} = (M_{i} - q_{A} - q_{B} - 1)q_{A}$ \
+Broniaus išlošiai: $\pi_{B} = P(Q) q_{B} - q_{A} = (M_{i} - q_{A} - q_{B})q_{B} - q_{B} = (M_{i} - q_{A} - q_{B} - 1)q_{B}$ \
+
+Spręsime atbuline indukcija. \
+Ieškome **Broniaus geriausio atsako**: \
+Bronius nežino $M$, bet maksimizuoja savo išlošį $\pi_{B}$: \
+$\pi_{B} = P(Q) q_{B} - q_{A} = (M_{i} - q_{A} - q_{B})q_{B} - q_{B}$
+
+Skaičiuojama išvestinė pagal $q_{B}$ ir prilyginama nuliui: \
+$\frac{\partial \pi_{B}}{\partial q_{B}} = M_{i} - q_{A} - 2q_{B} - 1 = 0 \Rightarrow q_{B} = \frac{M_{i} - q_{A} - 1}{2}$
+
+**Aloyzas turi pasirinkti $q_{A}$** taip, kad Bronius galėtų atskirti rinkos tipus.
+Aloyzas siunčia skirtingus signalus (pranešimus):
+
+* Jei $M = 22$, Aloyzas pasirenka $q_{A} (22)$ \
+* Jei $M = 8$, Aloyzas pasirenka $q_{A} (8)$
+
+Aloyzas numato geriausią Broniaus atsakymą $q_{B} = \frac{M_{i} - q_{A} - 1}{2}$ ir maksimizuoja savo išlošį $\pi_{A}$. \
+Įstatome $q_{B}$ į $\pi_{A}$: \
+$\pi_{A} = (M_{i} - q_{A} - \frac{M_{i} - q_{A} - 1}{2})q_{A} - q_{A}$
+
+Suprastinus išraišką: \
+$\pi_{A} = \left( \frac{M_{i} - q_{A} + 1}{2} \right)q_{A}-q_{A} = \frac{(M_{i} - q_{A} + 1)q_{A} - q_{A}}{2}$
+
+Skaičiuojama išvestinė pagal $q_{A}$ ir prilyginama nuliui: \
+$\frac{\partial \pi_{A}}{\partial q_{A}} = \frac{M_{i} - 2q_{A} + 1}{2} - 1 = 0$
+
+Gauname, \
+$M_{i} - 2q_{A} + 1 = 2 \Rightarrow q_{A} = \frac{M_{i}-1}{2}$
+
+**Atskiriamoji pusiausvyra**: \
+Kai $M_{i} = 22$: $q_{A} = \frac{22-1}{2} = 10.5$ \
+Kai $M_{i} = 8$: $q_{A} = \frac{8-1}{2} = 3.5$
+
+Aloyzas pasirenka $q_{A} = 10.5$, kai $M = 22$ ir $q_{A} = 3.5$, kai $M = 8$. \
+Bronius stebi $q_{A}$ ir taip atskiria rinkos tipą.
+
+## Apjungiamoji pusiausvyra
+> Atskiriamosios pusiausvyros priešingybė – apjungiamoji SigP (angl. *pooling*),
+siunčiamas tas pats signalas, todėl informacijos gavėjas negali jų atskirti remdamasis tik signalu.
+
+Apjungiamoji pusiausvyra egzistuoti gali, jei: \
+
+* Aloyzas pasirenka tą patį $q_{A}$ abiem atvejais, nepriklausomai nuo rinkos tipo ($M_{i}$).
+* Bronius renkasi $q_{B}$ remdamasis savo lūkesčiais apie $M_{i}$.
+
+**Aloyzo išlošiai**.
+
+Jei Aloyzas pasirenka tą patį $q_{A}$ nepriklausomai nuo $M_{i}$, Broniaus geriausias atsakas remiasi jo lūkesčiais $\mu(M_{i})$: \
+Tarkime, $\mu(M_{i} = 22) = p$, o $\mu(M_{i} = 8) = 1 - p$.
+
+Tada, Broniaus tikėtinas geriausias atsakas:
+$q_{B} = \frac{\mathbb{E}[M_{i}]-q_{A}-1}{2}$, kur $\mathbb{E}[M_{i}] = 22p+8(1-p)$
+
+Apjungiamoji pusiausvyra egzistuos, jei Aloyzui bus naudinga rinktis tą patį $q_{A}$ abiem atvejais, t. y. Aloyzas neturi paskatų nukrypti. Tai įmanoma, kai $p$ yra tinkamas (pvz., p = 0.5).
+
+**Broniaus geriausias atsakas** \
+Tarkime, kad Bronius mano, jog $M_{i}$ yra galimų rinkos verčių vidurkis, t. y. Bronius tikisi vienodo rinkos tipų pasiskirstymo ($p = 0.5$), tuomet: \
+$\mathbb{E}[M_{i}]=\frac{22+8}{2}=15$
+
+Atsižvelgiant į tai, Bronio paklausos funkcija:
+
+\[
+P(Q) = \max\{15 - Q, 0\}, \quad Q = q_A + q_B.
+\]
+
+Bronius maksimizuoja savo išlošį:  
+\[
+\pi_B = q_B \cdot P(Q) - q_B = q_B \cdot (15 - q_A - q_B) - q_B.
+\]
+
+Išvestinė, siekiant maksimizuoti \(\pi_B\) pagal \(q_B\):  
+\[
+\frac{\partial \pi_B}{\partial q_B} = 15 - q_A - 2q_B - 1 = 0.
+\]
+
+Išsprendus, gauname \(q_B\):  
+\[
+q_B = \frac{14 - q_A}{2}.
+\]
+
+Aloyzas numato Bronio atsaką ir pasirenka \(q_A\), kad maksimizuoti savo išlošį:  
+\[
+\pi_A = q_A \cdot P(Q) - q_A = q_A \cdot (15 - q_A - q_B) - q_A.
+\]
+
+Įrašome \(q_B = \frac{14 - q_A}{2}\) į \(Q = q_A + q_B\):  
+\[
+Q = q_A + \frac{14 - q_A}{2} = \frac{q_A + 14}{2}.
+\]
+
+Paklausos funkcija tampa:  
+\[
+P(Q) = 15 - \frac{q_A + 14}{2} = \frac{16 - q_A}{2}.
+\]
+
+Tada, Aloyzo išlošis:  
+\[
+\pi_A = q_A \cdot \frac{16 - q_A}{2} - q_A = \frac{16q_A - q_A^2}{2} - q_A  = -\frac{q_A^2}{2} + 7q_A.
+\]
+
+Išvestinė, siekiant maksimizuoti \(\pi_A\):  
+\[
+\frac{\partial R_A}{\partial q_A} = -q_A + 7 = 0. \Rightarrow q_A = 7
+\]
+
+Jeigu Aloyzas pasirenka \(q_A = 7\) abiejų rinkos tipų atveju (\(M_i = 22\) ir \(M_i = 8\)), todėl Bronius negali atskirti rinkos tipo ir optimaliai reaguoja:  
+\[
+q_B = \frac{14 - q_A}{2} = \frac{14 - 7}{2} = 3.5.
+\]
+
+Bendras gamybos kiekis:  
+\[
+Q = q_A + q_B = 7 + 3.5 = 10.5.
+\]
+
+Abiem rinkos tipų atvejais, kai $p = 0.5$: \
+Apjungiamoji pusiausvyra galėtų būti: \
+
+$q_{A} = 7$ \
+$q_{B} = 3.5$
+
+Apjungiamajai pusiausvyrai apskaičiuoti daroma prielaida, kad Bronius tikisi vienodo rinkos tipų pasiskirstymo ($p = 0.5$), todėl tikėtina rinkos dydžio vertė tampa $\mathbb{E}[M_i] = 15$. Dėl to $q_A = 7$ pasirinkimas pateisina pusiausvyrą, nes tai užtikrina, kad Aloyzas ir Bronius maksimaliai optimizuoja savo išlošius (pelną). Jei $p \neq 0.5$, Broniaus atsakas ir tikėtinas išlošis keistųsi, tačiau esant $q_A = 7$, sąlygos vis dar tenkinamos.
+
+Toliau pateikiamas **R ir Python programinis kodas**.
+
+## {.tabset}
+### R
+```{r, warning=FALSE, message=FALSE}
+# Apibrėžiama netiesioginė paklausos funkcija
+inverse_demand <- function(M, Q) {
+return(max(M - Q, 0))
+}
+
+# Apibrėžiama Aloyzo išlošių funkcija
+profit_A <- function(q_A, q_B, M) {
+Q <- q_A + q_B
+P <- inverse_demand(M, Q)
+return((P - 1) * q_A)
+}
+
+# Apibrėžiama Broniaus išlošių funkcija
+profit_B <- function(q_A, q_B, M) {
+Q <- q_A + q_B
+P <- inverse_demand(M, Q)
+return((P - 1) * q_B)
+}
+
+# Atskiriamoji pusiausvyra
+find_separating_equilibrium <- function(M) {
+q_A <- (M - 1) / 2
+q_B <- (M - 1) / 4
+return(list(q_A = q_A, q_B = q_B))
+}
+
+# Apjungiamoji pusiausvyra
+find_pooling_equilibrium <- function(M1, M2) {
+q_A <- (M1 + M2 - 2) / 4
+q_B <- (M1 + M2 - 2) / 8
+return(list(q_A = q_A, q_B = q_B))
+}
+
+# Rinkos tipai
+M1 <- 22
+M2 <- 8
+
+separating_eq_M1 <- find_separating_equilibrium(M1)
+separating_eq_M2 <- find_separating_equilibrium(M2)
+
+pooling_eq <- find_pooling_equilibrium(M1, M2)
+
+```
+
+```{r, echo=FALSE}
+cat("Separating Equilibrium for M = 22:\n")
+print(separating_eq_M1)
+
+cat("Separating Equilibrium for M = 8:\n")
+print(separating_eq_M2)
+
+cat("Pooling Equilibrium:\n")
+print(pooling_eq)
+```
+
+### Python
+```{python}
+import numpy as np
+from typing import Tuple, Dict
+
+class SignalingGame:
+    def __init__(self):
+        # Rinkos tipai
+        self.m1 = 22
+        self.m2 = 8
+        # Ribinės sąnaudos
+        self.mc = 1
+        
+    def price_function(self, m: float, qA: float, qB: float) -> float:
+        """Apskaičiuojama rinkos kaina, atsižvelgiant į kiekį ir rinkos tipą."""
+        Q = qA + qB
+        return max(m - Q, 0)
+    
+    def profit_A(self, m: float, qA: float, qB: float) -> float:
+        """Skaičiuojamas Aloyzo išlošis."""
+        P = self.price_function(m, qA, qB)
+        return (P - self.mc) * qA
+    
+    def profit_B(self, m: float, qA: float, qB: float) -> float:
+        """Skaičiuojamas Broniaus išlošis."""
+        P = self.price_function(m, qA, qB)
+        return (P - self.mc) * qB
+    
+    def find_separating_equilibrium(self, m: float) -> Dict[str, float]:
+        """Randama atskiriamoji pusiausvyra tam tikram rinkos tipui."""
+        qA = (m - self.mc) / 2
+        qB = (m - self.mc) / 4
+        return {"qA": qA, "qB": qB}
+    
+    def find_pooling_equilibrium(self) -> Dict[str, float]:
+        """Randama apjungiamoji pusiausvyra."""
+        expected_m = (self.m1 + self.m2) / 2
+        
+        qA = (expected_m - self.mc) / 2
+        qB = (expected_m - self.mc) / 4
+        
+        return {"qA": qA, "qB": qB}
+
+def main():
+    game = SignalingGame()
+    
+    sep_eq_high = game.find_separating_equilibrium(game.m1)
+    sep_eq_low = game.find_separating_equilibrium(game.m2)
+    
+    pool_eq = game.find_pooling_equilibrium()
+    
+    # Rezultatai
+    print("\nAtskiriamoji pusiausvyra:")
+    print(f"Aukštos vertės rinka (m = {game.m1}):")
+    print(f"qA = {sep_eq_high['qA']:.2f}, qB = {sep_eq_high['qB']:.2f}")
+    print(f"Žemos vertės rinka (m = {game.m2}):")
+    print(f"qA = {sep_eq_low['qA']:.2f}, qB = {sep_eq_low['qB']:.2f}")
+    
+    print("\nApjungiamoji pusiausvyra:")
+    print(f"qA = {pool_eq['qA']:.2f}, qB = {pool_eq['qB']:.2f}")
+    
+    # Išlošiai
+    high_profit_A = game.profit_A(game.m1, pool_eq['qA'], pool_eq['qB'])
+    low_profit_A = game.profit_A(game.m2, pool_eq['qA'], pool_eq['qB'])
+    print(f"\nAloyzo išlošiai:")
+    print(f"Aukštos vertės rinka: {high_profit_A:.2f}")
+    print(f"Žemos vertės rinka: {low_profit_A:.2f}")
+
+if __name__ == "__main__":
+    main()
+   
+```
+
+
+# 5.9 užduotis. Specialūs nekooperatinių lošimų skyriai
+“Kuri valiuta liks?” Tarkime kad vienos tokios šalies gyventojai gali laikyti pinigus doleriais arba eurais. Tačiau jei reikia atsiskaityti tai atsiskaitymai turi vykti ta pačia valiuta. \
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+library(kableExtra)
+
+strategic_df <- data.frame(
+  `A/B` = c("USD", "EUR"), 
+  USD = c("(1, 1)", "(0, 0)"),
+  EUR = c("(0, 0)", "(1, 1)")
+)
+
+kable(
+  strategic_df,
+  col.names = c("A/B", "USD", "EUR"),
+  caption = ""
+) %>%
+  kable_styling(full_width = FALSE, position = "center", latex_options = "hold_position") %>%
+  column_spec(1, bold = TRUE, width = "2cm") %>% # Adjust the width of the "A/B" column
+  column_spec(2, width = "2cm") %>%              # Adjust the width of the "USD" column
+  column_spec(3, width = "2cm")                 # Adjust the width of the "EUR" column
+
+```
+a) Raskite šio lošimo visas Nash pusiausvyras. \
+b) Kurios iš jų yra evoliuciškai stabilios pusiausvyros?
+
+> Evoliucijos kontekste– evoliuciškai stabili pusiausvyra turi būti atspari mutacijoms. \
+Mišrioji strategija $\sigma$ yra **evoliuciškai stabili pusiausvyra (ESP)**, jeigu $\forall \sigma^{'} \neq \sigma, \exists \bar{\varepsilon} \gt 0$,
+$\forall 0 \lt \varepsilon \le  \bar{\varepsilon}: \sigma A \big[ (1 - \varepsilon) \sigma + \varepsilon \sigma' \big]^T > \sigma' A \big[ (1 - \varepsilon) \sigma + \varepsilon \sigma' \big]^T$
+
+
+## Nash pusiausvyros
+
+
+Šiame lošime egzistuoja trys simetrinės Nash pusiausvyros $X_{1} = (1, 0) = Y_{1}$, $X_{2} = (0, 1) = Y_{2}$ ir viena Nash pusiausvyra mišriosiomis strategijomis $X_{3} = \left( \frac{1}{2},\frac{1}{2} \right) = Y_{3}$.
+
+Tai atitinka atvejus, kai šalies gyventojai naudoja dolerius, visi gyventojai naudoja eurus arba, kai viena dalis gyventojų naudoja eurus, o kita dalis – dolerius.
+
+### {.tabset}
+
+#### R
+
+**Strateginė normalioji lošimo forma.**
+
+Normalios (strateginės) formos lošimą patogu pateikti lentele (matrica).
+(A) lošėjo strategijos – eilutės, (B) lošėjo – stulpeliai.
+Lentelė pateikiama žemiau:
+
+```{r}
+game1 <- normal_form(
+  players = c("A", "B"),
+  s1 = c("USD", "EUR"), 
+  s2 = c("USD", "EUR"), 
+  payoffs1 = c(1, 0, 0, 1),
+  payoffs2 = c(1, 0, 0, 1))
+
+sol1 <- solve_nfg(game1, show_table = FALSE)
+sol1_table <- sol1$table
+sol1_table <- gsub("strategy", "Strategija", sol1_table)
+sol1_table <- gsub("([0-9-]+)\\^", "<u>\\1</u>", sol1_table)
+sol1_table <- gsub("<b>([0-9])</b>", "\\1", sol1_table) 
+
+sol1_table
+```
+
+
+Strateginės formos lošimas mišriosiomis strategijomis
+Jei lošėjas visada renkasi tą pačią strategiją, priešininkas gali laimėti lošimą. Reikalingos mišriosios strategijos.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(knitr)
+library(kableExtra)
+
+strategic_df <- data.frame(
+    `A/B` = c("USD", "EUR", ""),
+    USD = c("(1, 1)", "(0, 0)", "p"),
+    EUR = c("(0, 0)", "(1, 1)", "1-p"),
+    ` ` = c("q", "1-q", "")
+)
+
+kable(
+    strategic_df,
+    col.names = c("A/B", "USD", "EUR", ""),
+    caption = ""
+) %>%
+    kable_styling(full_width = FALSE, position = "center", latex_options = "hold_position") %>%
+    column_spec(1, bold = TRUE, width = "2cm") %>% 
+    column_spec(2, width = "2cm") %>%             
+    column_spec(3, width = "2cm") %>%             
+    column_spec(4, width = "2cm")
+```
+
+$\rho_{A}: \pi_{A}(USD|(p,1-p))\equiv 1 >< \pi_{A}(EUR|(p,1-p))\equiv 1-2p, \Leftrightarrow p >< \frac{1}{2}$, taigi iš čia:
+
+\begin{equation*}
+    \rho_{A} = 
+    \begin{cases}
+      0, & p < \frac{1}{2},\\
+      [0,1], & p = \frac{1}{2},\\
+      1, & p > \frac{1}{2}
+    \end{cases}
+\end{equation*}
+
+Vienintelė N.P. mišriosiomis strategijomis yra $\sigma{*}_{i}=\left( \frac{1}{2}, \frac{1}{2} \right), i \in \left\{ A,B \right\}$. \
+
+
+Vaizduojama grafiškai:
+```{r warning=FALSE, message=FALSE, out.width="80%"}
+library(ggplot2)
+custom_colors <- custom_colors <- c("#000076", "#0B0E0A")
+
+sol1$br_plot +
+  scale_color_manual(values = custom_colors)
+```
+
+Geriausio atsako funkcijų susikirtimo taškai yra Nash pusiausvyros.
+
+
+#### Python
+Naudojant Python `Nashpy` biblioteką [2] randamos visos lošimo Nash pusiausvyros:
+```{python}
+import nashpy as nash
+import numpy as np
+from egttools import games
+
+# Apibrėžiama matrica
+payoff_matrix = np.array([[1, 0], [0, 1]])  # Simetrinė matrica
+
+# Nash pusiausvyros paieška
+game = nash.Game(payoff_matrix, payoff_matrix)
+print("Nash pusiausvyros:")
+
+for eq in game.support_enumeration():
+    print(f"A strategija: {eq[0]}, B strategija: {eq[1]}")
+```
+
+
+
+
+## Evoliuciškai stabilios pusiausvyros (ESP)
+
+Toliau, ieškosime, kurios iš Nash pusiausvyrų yra evoliuciškai stabilios pusiausvyros.
+
+a) $X_{1} = (1,0)$ (visi naudoja dolerius USD) \
+Kai visi naudoja dolerius: $u(1,1) = 1$ ir kai dalis populiacijos (x) bando pakeisti strategiją į eurus $u(x,1) = x$. Išlošis x, nes tie, kurie dabar naudojasi eurais, negali atsiskaityti su tais, kurie naudoja dolerius. \
+Taigi, $u(1,1)>u(x,1), x \neq 1$, todėl $X_{1}$ **yra ESP**.
+
+b) $X_{2} = (0,1)$ (visi naudoja eurus EUR) \
+Turime, kad $u(0,0) = 1$ ir $u(x,0) = x$, taigi $u(0,0)>u(x,0), x \neq 1$, todėl $X_{2}$ **yra ESP**.
+
+$X_{1}$ ir $X_{2}$ yra griežtoji (angl. *strict*) Nash pusiausvyra, todėl ir ESP.
+
+> **ESP 2-oji savybė**. Jei \((X^*, X^*)\) yra griežtoji Nash pusiausvyra, tada \(X^*\) yra ESP.
+Kadangi, \((x^*, x^*)\) yra griežtoji Nash pusiausvyra, tai 
+\(u(x^*, x^*) > u(y, x^*)\) bet kuriam \(y \neq x^*\). Tada, bet kuriam pakankamai mažam \(p\), turėtume:
+>
+\[
+p u(x^*, y) + (1 - p) u(x^*, x^*) > p u(y, y) + (1 - p) u(y, x^*),
+\] kai \(0 < p < p_y\), kur \(p_y > 0\)
+
+c) $X_{3} = u\left( \frac{1}{2},\frac{1}{2} \right) = \frac{1}{2}$ ir
+$u\left(x,\frac{1}{2} \right) = \frac{1}{2}$
+
+Kai pusė populiacijos naudoja dolerius, o kita pusė eurus. \
+Taigi, $u\left( x^{*}, x^{*} \right) = u\left( \frac{1}{2},\frac{1}{2} \right) = \frac{1}{2}=u\left( x,x^{*} \right)=u\left( x,\frac{1}{2} \right)$ visiems $x\neq x^{*} =\frac{1}{2}$ \
+
+Toliau tikriname: \
+$u\left( x^{*}, x^{*} \right) = u\left( x,x^{*} \right) = \frac{1}{2} \Rightarrow u\left( x^{*},x = \frac{1}{2} \right) \gt u\left( x,x \right) = x^{2} + (1-x)^{2}$ visiems $x\neq \frac{1}{2}$
+
+Bet yra daugybė $x$ reikšmių, kurioms ši nelygybė negalioja. Pavyzdžiui, kai $x = \frac{1}{4}$, tai $\frac{1}{16} + \frac{9}{16} = \frac{10}{16} \gt \frac{1}{2}$
+
+Vadinasi, Nash pusiausvyra $X_{3}$ mišriosiomis strategijomis, kurioje lošėjas naudoja eurus ir dolerius su vienoda tikimybe, **nėra** evoliuciškai stabili pusiausvyra.
+
+Atsiskaitymai vyks ta pačia valiuta, atsiskaitymams bus naudojami tik eurai, arba tik doleriai, o kita valiuta išnyks.
+
+Žemiau pateikiamas **R programinis kodas**, norint patikrinti ar Nash pusiausvyros yra ESP.
+Naudojant `EvoliutionaryGames` paketą [1]:
+
+```{r, warning=FALSE, message=FALSE}
+library(EvolutionaryGames)
+A <- matrix(c(1, 0, 0, 1), nrow=2, byrow=TRUE)
+strategies <- c("USD", "EUR")
+ESS(A, strategies)
+```
+Jei lošimas neturi evoliuciškai stabilios pusiausvyros, funkcija `ESP()` grąžina `NULL` reikšmę.
+
+```{r}
+# Funkcija, skaičiuoti išlošius
+calculate_payoff <- function(x, y) {
+  payoff_matrix <- matrix(c(1,0,0,1), nrow=2, ncol=2)
+  return(x[1]*y[1]*payoff_matrix[1,1] + x[1]*y[2]*payoff_matrix[1,2] + 
+         x[2]*y[1]*payoff_matrix[2,1] + x[2]*y[2]*payoff_matrix[2,2])
+}
+
+# Funkcija, tikrinti ar yra ESP
+check_ESS <- function(strategy) {
+  x <- c(0.9, 0.1)
+  
+  # Išlošiai
+  payoff_original <- calculate_payoff(strategy, strategy)
+  payoff_alternative <- calculate_payoff(x, strategy)
+  
+  is_ESS <- payoff_original > payoff_alternative
+  
+  return(is_ESS)
+}
+
+# Apibrėžiamos Nash pusiausvyros
+X1 <- c(1, 0)
+X2 <- c(0, 1)
+X3 <- c(0.5, 0.5)  # Mišri strategija
+
+# Tikrinama, ar Nash pusiausvyra yra ESP
+X1_ESS <- check_ESS(X1)
+X2_ESS <- check_ESS(X2)
+X3_ESS <- check_ESS(X3)
+```
+
+
+```{r, echo=FALSE}
+cat("X1 -> ESP:", X1_ESS, "\n")
+cat("X2 -> ESP:", X2_ESS, "\n")
+cat("X3 (mišrioji strategija) -> ESP:", X3_ESS, "\n")
+```
+
+# 6.5 užduotis. Koalicinės formos lošimai
+
+“Hekstech Pirštinių Partnerystė” Po Hextech revoliucijos Piltover’io mokslininkai ir Zauno lyderiai pradeda derybas dėl naujų technologinių sprendimų. Kiekvienas veikėjas turi
+specifinį Hekstech komponentą: \
+– Kairiosios pirštinės simbolizuoja Hekstech energijos generatorius, iš viso jų yra 3. \
+– Dešiniosios pirštinės simbolizuoja Hekstech stabilizatorius, iš viso jų yra 2. \
+a) Nustatykite lošimo tipą ir jo savybes. \
+b) Raskite Šerdį. \
+c) Raskite Shapley vertę. \
+d) Nustatykite b) ir c), kai Ekko ir Džinks rado būdą sukurti dar 2 stabilizatorius.
+
+## Lošimo tipas ir savybės
+
+Sąlygoje apibrėžtas lošimas yra:
+
+- Baigtinis lošimas, kadangi yra ribotas skaičius galimų derinių ($3 \times 2 = 6$); \
+- Pilnos informacijos lošimas – visi lošėjai žino visus galimus ėjimus ir jų pasekmes; \
+- Simetrinis lošimas – abu lošėjai turi vienodas galimybes pasiekti savo tikslus; \
+- **Kooperatinis lošimas su transferabiliąja naudingumo funkcija (TU)** – lošėjai gali bendradarbiauti siekdami optimalaus rezultato.
+
+**Lošimo tipas:** Tai dviejų lošėjų kooperacinis lošimas su transferabiliąją nauda (TU), konkrečiai – **pirštinių lošimas** (angl. *glove game*). Lošime reikia papildomų elementų (kairiųjų ir dešiniųjų pirštinių), kurie kartu sukuria vertę.
+
+> **Kooperatiniuose lošimuose** (veiksmai daromi kartu) arba **koalicinės formos** (koalicija veikia kaip vienas lošėjas) veiksmai ir strategijos priimami kaip jungtiniai sprendimai, kai **nekooperatiniuose** lošimuose veiksmai, jų sekos yra daromi individualiais lošėjais.
+
+Iš viso lošime yra 3 Hextech energijos generatoriai (kairiosios pirštinės) ir 2 Hextech stabilizatoriai (dešiniosios pirštinės), o kiekvienai kairiajai pirštinei gali būti priskirta bet kuri dešinioji pirštinė, todėl ne visi veikėjai gali pasidalinti po lygiai.
+
+Kadangi resursai yra *riboti*, abi pusės (Piltover’io mokslininkai ir Zauno lyderiai) turi ieškoti kompromiso, susitarti dėl Hextech komponentų paskirstymo, pagrindinis tikslas yra sudaryti parnerystę, rasti bendrą sprendimą, kuris tenkintų abi Hextech puses.
+
+Tegul $\mathcal{N}$ sudaro pusės, dalyvaujančios derybose dėl Hextech naujų technologinių sprendimų: $P$ – Piltover'io mokslininkai ir $Z$ –  Zauno lyderiai, t. y. $\mathcal{N} = \left\{ P,Z \right\}$ yra lošėjų aibė. \
+Visos galimos koalicijos sudaro šios aibės poaibių aibę:
+$2^{\mathcal{N}} = \left\{ \emptyset, \left\{ P \right\}, \left\{ Z \right\}, \left\{ P,Z \right\} \right\}$
+
+Tuomet, charakteringoji funkcija $\nu(S)$, kuri kiekvienai koalicijai $S$ nurodo maksimalų Hextech komponentų skaičių, kurį ta koalicija gali gauti, šiam lošimui apibrėžiama taip:
+
+a) Kai $S = \emptyset$, tai $\nu(\emptyset) = 0$. Be bendradarbiavimo negalima sukurti veikiančio Hekstech įrenginio
+
+b) Kai $S = \left\{ P \right\}$ ir kai $S = \left\{ Z \right\}$
+
+c) $\nu( \left\{ P,Z \right\}) = 6$ (visi galimi deriniai)
+Ši reikšmė gaunama iš visų galimų produktyvių derinių skaičiaus (3 kairiosios × 2 dešiniosios = 6)
+
+**Charakteringosios funkcijos savybės**:
+
+a) Lošimas tenkina superadityvumą: $\nu(\left\{ P,Z \right\}) \ge  \nu(\left\{ P \right\}) + \nu(\left\{ Z \right\})$, t. y. $6 \ge 0 + 0$
+
+b) $\nu$ yra monotoninė: jei $S \subseteq  T$, tai $\nu(S) \le \nu(T)$
+Pavyzdžiui: $\nu(\left\{ P \right\}) \le \nu(\left\{ P,Z \right\})$, t. y.
+$0 \le  6$
+
+c) Nemažėjanti: pridėjus prijungus lošėją į koaliciją, jos vertė nesumažėja
+
+d) Nulinė tuščiajai aibei: $\nu(\emptyset) = 0$
+
+Tačiau, laikant, kad lošėjų aibę sudaro: **Piltover'is (P) su 3 kairiosiomis** pirštinėmis (energijos generatoriais) ir **Zaun'as (Z) su 2 dešiniosiomis** pirštinėmis (stabilizatoriais), lošimas apibrėžiamas taip:
+
+- **Lošėjai:** Piltover'is (P) su 3 kairiosiomis pirštinėmis (energijos generatoriais) ir Zaun'as (Z) su 2 dešiniosiomis pirštinėmis (stabilizatoriais).  
+Tuomet, **charakteringoji funkcija** (koalicijų vertės):  
+  - \( v(\emptyset) = 0 \)  
+  - \( v(\{P\}) = 0 \) (nėra stabilizatorių)  
+  - \( v(\{Z\}) = 0 \) (nėra generatorių)  
+  - \( v(\{P, Z\}) = \min(3, 2) = 2 \) (sukuriamos poros).  
+- **Pagrindinės savybės:**  
+  - Abu **lošėjai yra būtini** – nei vienas negali kurti vertės vienas.  
+  - **Superadityvumas:** \( v(\{P, Z\}) \geq v(\{P\}) + v(\{Z\}) \), nes \( 2 > 0 + 0 \). 
+
+## Šerdis
+
+> Lošimo $\nu \in \mathcal{G}_{\mathcal{N}}$ šerdis (angl. *core*) yra visų dalybų $x$ aibė
+$C(\nu) = \{ x \in \mathbb{R}^n \mid x(\mathcal{N}) = \nu(\mathcal{N}), \, x(S) \geq \nu(S), \, \forall S \subseteq \mathcal{N}, \, S \neq \emptyset \}$
+
+**b) Šerdis:**  
+Šerdis (stabilių išmokų aibė) – tai dalybų, išmokų \((x, y)\) pasiskirstymai, tenkinantys:  
+1. **Individualų racionalumą:** \( x \geq 0 \), \( y \geq 0 \).  
+2. **Kolektyvinį racionalumą:** \( x + y = v(\{P, Z\}) = 2 \).  
+Taaigi, šerdis – tiesė \((x, 2 - x)\), kur \( 0 \leq x \leq 2 \). Visi išmokų pasiskirstymai (dalybos) stabilūs, nes nei vienas lošėjas negali gauti daugiau veikdamas vienas.  
+
+## Shapley vertė
+
+> Shapley vertė yra vienas iš būdų paskirstyti visą pelną lošėjams, darant prielaidą, kad jie visi bendradarbiauja. $\exists !\xi$ nusakyta koalicinių lošimų klasėje $\mathcal{G}_{\mathcal{N}}$ tenkinanti S1-S4 aksiomas (vertė $\xi$ yra efektyvioji, tenkina butaforinio lošėjo aksiomą, yra simetrinė ir adityvioji), $\forall \nu\in \mathcal{G}_{\mathcal{N}}, \forall i\in \mathcal{N}$: $\mathcal{Sh}_i(\nu) = \sum_{s=0}^{n-1} \frac{s!(n-s-1)!}{n!} \sum_{\mathcal{S} \subseteq \mathcal{N} \setminus \{i\}, |\mathcal{S}| = s} \big(\nu(\mathcal{S} \cup \{i\}) - \nu(\mathcal{S})\big)$
+
+**c) Shapley vertė:**  
+Shapley (teisingas padalijimas) vertė skaičiuojama pagal kiekvieno lošėjo **vidutinį ribinį indėlį** į visas koalicijas.  
+
+- Tuomet, kiekvieno lošėjo **ribiniai indėliai:**  
+  - Piltoverio indėlis: \( v(\{P, Z\}) - v(\{Z\}) = 2 - 0 = 2 \).  
+  - Zauno indėlis: \( v(\{P, Z\}) - v(\{P\}) = 2 - 0 = 2 \).  
+- **Vidutinis indėlis:** Kadangi yra du koalicijų variantai (P pirmas arba Z pirmas), kiekvieno lošėjo Shapley vertė:  
+  \[
+  \phi_P = \phi_Z = \frac{2 + 0}{2} = 1.
+  \]  
+Taigi, Shapley vertė = \( (1, 1) \).
+
+---
+
+**d) Ekko ir Džinks sukūrus papildomai 2 stabilizatorius (Zaunas turi 4 stabilizatorius):**
+
+- Nauja koalicijos vertė: \( v(\{P, Z\}) = \min(3, 4) = 3 \).  
+- **Atnaujinta charakteringoji funkcija:**  
+  - \( v(\{P, Z\}) = 3 \), likusios nepakito.  
+- **Šerdis:** Išmokos \((x, 3 - x)\), kur \( 0 \leq x \leq 3 \).  
+- **Shapley vertė:**  
+  - Piltoverio ribinis indėlis: \( 3 - 0 = 3 \). \
+  - Zauno ribinis indėlis: \( 3 - 0 = 3 \).  
+  - Vidutinis indėlis:  
+    \[
+    \phi_P = \phi_Z = \frac{3 + 0}{2} = 1.5.
+    \]  
+Taigi, sukūrus papildomai 2 stabilizatorius Shapley vertė = \( (1.5, 1.5) \).
+
+Toliau  pateikiamas R programinis kodas, naudojant `GameTheory` biblioteką:
+
+## {.tabset}
+### R
+```{r, warning=FALSE, message=FALSE}
+library(GameTheory)
+library(gtools)
+
+# Koalicijų vertės 2 lošėjų lošime:
+# Tvarka: { }, {P}, {Z}, {P+Z}
+v_original <- c(0, 0, 0, 2)
+v_modified <- c(0, 0, 0, 3)   # papildžius stabilizatoriais
+
+# Funkcija, kuri apskaičiuoja Šerdį
+calculate_core <- function(v) {
+  x_min <- 0
+  x_max <- v[4]  # v({P, Z})
+  core <- data.frame(
+    x = seq(x_min, x_max, by = 0.5),
+    y = v[4] - seq(x_min, x_max, by = 0.5)
+  )
+  return(core)
+}
+```
+
+```{r, echo=FALSE}
+cat("Lošimas su dviem stabilizatoriais- Šerdis:\n")
+print(calculate_core(v_original))
+
+cat("Lošimas pridėjus papildomų stabilizatorių - Šerdis:\n")
+print(calculate_core(v_modified))
+```
+
+```{r}
+
+# Funkcija Shapley vertei apskaičiuoti
+calculate_shapley <- function(v) {
+  phi_P <- (v[4] - v[3] + v[2]) / 2
+  phi_Z <- (v[4] - v[2] + v[3]) / 2
+  return(c(Piltoveris = phi_P, Zaunas = phi_Z))
+}
+```
+
+```{r, echo=FALSE}
+cat("Lošimas su dviem stabilizatoriais - Shapley vertė:\n")
+print(calculate_shapley(v_original))
+
+cat("Lošimas pridėjus papildomų stabilizatorių - Shapley vertė:\n")
+print(calculate_shapley(v_modified))
+```
+
+
+# 5.14* Papildoma užduotis
+
+“Kaip pasirinkti tinkamą skaičių?” [Barron, 7.7] Vai ir Džinks lošia simetrinį lošimą aprašoma matrica $ab \neq 0$:
+
+\begin{bmatrix}
+a & 0 \\
+0 & b \\
+\end{bmatrix}
+
+a) Kai $ab \lt 0$, yra tiksliai **viena ESP**. Raskite ją. \
+b) Kai $a \gt 0$, $b \gt  0$ yra trys simetrinės Nash’o pusiausvyros, kurių **mišrioji nėra** ESP, o **grynosios yra ESP**. Nustatykite jas ir parodykite evoliucinį (ne)stabilumą.\
+c) Kai $a \lt 0$, $b \lt  0$ yra trys simetrinės Nash’o pusiausvyros, kurių tik **mišrioji yra** ESP, o **grynosios nėra ESP**. Nustatykite jas ir parodykite evoliucinį (ne)stabilumą.
+
+
+Matrica aprašomas lošimas, kuriame kiekvienas lošėjas turi dvi strategijas:
+
+- Pirmoji strategija: pasirinkti pirmąjį veiksmą $s_{1} = \left( 1,0 \right)$.\
+- Antroji strategija: pasirinkti antrąjį veiksmą $s_{2} = \left( 0,1 \right)$
+
+## 1) atvejis
+
+::: {.adm .adm-note}
+Kai $ab \lt 0$ (vienas iš $a$ arba $b$ yra teigiamas, o kitas – neigiamas)
+
+Egzistuoja unikali, griežta, simetrinė ESP: $X^{*} = \left( 0,1 \right)$, jei $a \lt 0$, $b \gt 0$ ir  $X^{*} = \left( 1,0 \right)$, jei $a \gt 0$, $b \lt 0$.
+
+:::
+
+a) Jei $a \gt 0$ ir $b \lt 0$:
+
+Jei abu lošėjai (Vai ir Džinks) pasirenka strategiją $\left( 1,0 \right)$, jų nauda yra $a$ kuri yra teigiama. Jei lošėjas pakeistų savo strategiją į $\left( 0,1 \right)$, jo nauda taptų $0$, o tai yra blogiau nei $a$.
+
+Grynoji strategija $(1,0)$ (visada rinktis pirmą veiksmą) yra griežtoji Nash pusiausvyra, nes pirmas veiksmas duoda teigiamą naudą $a$, o antrasis – $0$. 
+
+b) Analogiškai, jei  $a \lt 0$ ir  $b \gt 0$ grynoji strategija $(0,1)$ yra griežtoji Nash pusiausvyra.
+
+Pagal ESP 2-ąją savybę: Griežtoji Nash pusiausvyra yra evoliuciškai stabili pusiausvyra (ESP), todėl yra tiksliai viena ESP, priklausomai nuo $a$ arba $b$.
+
+> **ESP 2-oji savybė**. Jei \((X^*, X^*)\) yra griežtoji Nash pusiausvyra, tada \(X^*\) yra ESP.
+Kadangi, \((x^*, x^*)\) yra griežtoji Nash pusiausvyra, tai 
+\(u(x^*, x^*) > u(y, x^*)\) bet kuriam \(y \neq x^*\). Tada, bet kuriam pakankamai mažam \(p\), turėtume:
+>
+\[
+p u(x^*, y) + (1 - p) u(x^*, x^*) > p u(y, y) + (1 - p) u(y, x^*),
+\] kai \(0 < p < p_y\), kur \(p_y > 0\)
+
+## 2) atvejis
+
+::: {.adm .adm-note}
+Kai $a \gt 0$, $b \gt  0$
+
+Egzistuoja trys simetrinės Nash pusiausvyros $\left( 1,0 \right), \left( 0,1 \right), X$, kur $X = \left(  \frac{b}{\left( a+b \right)}, \frac{a}{\left( a+b \right)} \right)$. $\left( 1,0 \right), \left( 0,1 \right)$ yra griežtos, evoliuciškai stabilios. Mišrioji pusiausvyra nėra ESP:
+$E\left( 1,1 \right) = a \gt \frac{ab}{\left( a+b \right)} = E(X,1)$
+
+:::
+
+a) Strategijos $\left( 1,0 \right), \left( 0,1 \right)$:
+- Abu lošėjai pasirenka \((1, 0)\), gaudami \(a\).  
+  Jei kuris nors lošėjas keistų strategiją į \((0, 1)\), jo nauda taptų \(0\), o tai yra mažiau nei \(a\). Todėl \((1, 0)\) yra griežtoji Nash'o pusiausvyra $\to$ ESP.
+
+- Analogiškai, kai abu lošėjai pasirenka \((0, 1)\), gauna \(b\). Pakeitus strategiją,
+jo nauda taptų \(0\), o tai yra mažiau nei \(b\). Todėl \((0, 1)\) yra griežtoji Nash'o pusiausvyra $\to$ ESP.
+
+b) Mišrioji strategija:
+
+- Lošėjas pasirenka \((1, 0)\) su tikimybe \(p\) ir \((0, 1)\) su tikimybe \(1-p\).
+  Abi pusės pasirenka šią strategiją, kad vidutinė nauda būtų vienoda abiem grynosioms strategijoms.  
+  Lyginame vidutinę naudą:  
+  - Jei lošėjas pasirenka \((1, 0)\), jo vidutinė nauda yra \(p \cdot a + (1-p) \cdot 0 = p \cdot a\).
+  - Jei lošėjas pasirenka \((0, 1)\), jo vidutinė nauda yra \(p \cdot 0 + (1-p) \cdot b = (1-p) \cdot b\).
+
+  Kad mišrioji strategija būtų Nash'o pusiausvyra, šios naudos turi būti lygios:
+  \[
+  p \cdot a = (1-p) \cdot b
+  \]
+  Sprendžiame \(p\):
+  \[
+  p = \frac{b}{a+b}
+  \]
+
+  Taigi mišrioji strategija yra:
+  \[
+  s_3 = \left(\frac{b}{a+b}, \frac{a}{a+b}\right)
+  \]
+
+  
+   Mišrioji strategija nėra ESP, nes grynoji strategija gali suteikti didesnę naudą, jei dauguma lošėjų naudoja mišrią strategiją.
+
+   - Jei visi lošėjai naudoja mišrią strategiją \(X = (p, 1-p)\), mišrios strategijos vidutinė nauda yra:
+     \[
+     E(X, X) = p^2 \cdot a + 2p(1-p) \cdot 0 + (1-p)^2 \cdot b = p^2 \cdot a + (1-p)^2 \cdot b.
+     \]
+
+   - Jei vienas lošėjas nukrypsta ir pasirenka grynąją strategiją \((1, 0)\), jo vidutinė nauda yra:
+     \[
+     E(1, X) = p \cdot a + (1-p) \cdot 0 = p \cdot a.
+     \]
+
+   - Atliekamas palyginimas:
+     \[
+     E(1, 1) = a > \frac{ab}{a+b} = E(X, 1).
+     \]
+    Grynoji strategija \((1, 0)\) suteikia didesnę naudą, kai visi kiti taip pat naudoja grynąją strategiją, palyginti su mišria strategija. Ši nelygybė visada teisinga, nes \(a > 0\) ir \(b > 0\).
+
+
+## 3) atvejis
+
+::: {.adm .adm-note}
+Kai $a \lt 0$, $b \lt  0$
+
+Grynosios strategijos \((1, 0)\) ir \((0, 1)\) nėra ESP, nes jų nauda (\(a < 0\) arba \(b < 0\)) yra mažesnė nei mišrios strategijos nauda \(E(X, X)\).
+
+Mišrioji strategija \(X = \left(\frac{b}{a+b}, \frac{a}{a+b}\right)\) yra vienintelė ESP, nes ji užtikrina didžiausią įmanomą naudą (minimalizuoja nuostolius) šioje situacijoje.
+:::
+
+Jei dauguma lošėjų naudoja mišrią strategiją \(X = \left(\frac{b}{a+b}, \frac{a}{a+b}\right)\), jų vidutinė nauda yra:  
+\[
+E(X, X) = \left(\frac{b}{a+b}\right)^2 \cdot a + \left(\frac{a}{a+b}\right)^2 \cdot b.
+\]
+Kadangi \(a < 0\) ir \(b < 0\), ši išraiška yra neigiama, bet ji yra didžiausia įmanoma nauda mišrioje strategijoje.
+
+
+Jei lošėjas nukrypsta ir pasirenka grynąją strategiją \((1, 0)\), o dauguma lieka prie mišrios strategijos \(X\), jo nauda yra:  
+\[
+E(1, X) = \frac{ab}{a+b}.
+\]  
+Panašiai, jei lošėjas pasirenka \((0, 1)\), jo nauda yra:  
+\[
+E(0, X) = \frac{ab}{a+b}.
+\]  
+Abi šios reikšmės yra lygios mišrios strategijos \(X\) vidutinei naudai, todėl nukrypimas nuo mišrios strategijos neduoda jokio pranašumo.
+
+a) Grynosios strategijos nėra ESP  
+
+Jei visi lošėjai pasirenka \((1, 0)\), jų vidutinė nauda yra:  
+\[
+E(1, 1) = a.
+\]  
+Kadangi \(a < 0\), ši nauda yra mažesnė nei mišrios strategijos \(E(X, X)\).  
+Panašiai, jei visi pasirenka \((0, 1)\), jų nauda yra:  
+\[
+E(0, 0) = b,
+\]  
+kuri taip pat yra mažesnė už \(E(X, X)\), nes \(b < 0\).
+
+
+b) Mišrioji strategija \(X\) yra ESP
+
+Kad mišrioji strategija \(X\) būtų ESP, turi galioti:  
+\[
+E(X, Y) > E(Y, Y) \quad \text{visiems} \quad Y \neq X.
+\]  
+Jei lošėjas nukrypsta į strategiją \(Y = (y_1, y_2)\), jo vidutinė nauda yra:  
+\[
+E(Y, Y) = a \cdot y_1^2 + b \cdot y_2^2.
+\]  
+Kadangi \(a < 0\) ir \(b < 0\), ši reikšmė visada bus mažesnė už \(E(X, X)\), nes mišrios strategijos derinys minimalizuoja nuostolius.
+
+# Literatūra
+[1] Using EvolutionaryGames. https://cran.r-project.org/web/packages/EvolutionaryGames/vignettes/UsingEvolutionaryGames.html
+
+[2] Tutorial: building and finding the equilibrium for a game. https://nashpy.readthedocs.io/en/stable/tutorial/index.html#installing-nashpy
