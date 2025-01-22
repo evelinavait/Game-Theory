@@ -1,0 +1,549 @@
+---
+title: "Lošimų teorija"
+subtitle: "Namų darbai Nr. 1"
+author: "Evelina Vaitkevičiūtė (Nr. 2110930)"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: tango
+    self_contained: true
+    code_folding: show
+    gallery: true
+    df_print: kable
+    fig_caption: yes
+    use_bookdown: false
+    #css: styles.css
+    mathjax: "default"
+---
+
+
+```{r setup, include=FALSE}
+## Global options
+knitr::opts_chunk$set(cache = TRUE)
+library(reticulate)
+use_python("C:/Users/eveli/python3.11/python.exe")
+
+```
+
+```{r, echo=FALSE, results = 'hide', warning=FALSE}
+# Kalbos nustatymai
+sessionInfo()
+Sys.setlocale("LC_ALL","Lithuanian")
+```
+
+Darbui įsidiegiamos reikalingos bibliotekos `rgamer`.
+
+```{r libs, echo = FALSE, warning=FALSE, message=FALSE}
+#install.packages("gtree", repos = c("https://skranz-repo.github.io/drat/",getOption("repos")))
+#remotes::install_github("yukiyanai/rgamer")
+library(rgamer)
+library(gtree)
+```
+
+# 1.2 užduotis. Nekooperatinis lošimas
+Alisa ir Bazilio nusprendė lošti iš Pinokio pavogtos aukso monetos taip, kiekvienas pasirenka kiek pirštų rodyti (nuo vieno iki penkių). Jei pirštų suma lyginė, monetą laimi Alisa, o jei nelyginė – Bazilio. \
+a) Pateikite šį lošimą **strateginėje formoje**. \
+b) Kodėl šis lošimas yra panašus į monetos metimą? Kuo jis nuo monetos metimo skiriasi?
+Kaip atrodytų **mišrios strategijos**?
+
+# {.tabset}
+
+## Lošimas: Lyginė / nelyginė suma
+
+### Strateginė (normalioji) lošimo forma
+
+> Strateginės formos lošimas **grynosiomis strategijomis** nusakomas: \
+$G_{N} =\left\{ \mathcal{N}, \left\{ S_{i} \right\}_{i\in \mathcal{N}}, \left\{ \pi_{i}\left( \cdot  \right) \right\}_{i\in \mathcal{N}} \right\}$, \
+čia \
+$\mathcal{N} = \left\{[0],1,2,\ldots,n \right\}$ yra lošėjų aibė, \
+$S_{i}: H_{i} \to \mathcal{A}_{i}$ yra grynųjų strategijų aibė, \
+$\pi_{i}: S \to \mathbb{R}$ yra išlošiai.
+
+
+Šio lošimo **lošėjai**: Alisa ir Bazilio, t. y. lošėjų aibė $\mathcal{N} = \left\{ A,B \right\}$. \
+Kiekvienas žaidėjas gali pasirinkti rodyti nuo 1 iki 5 pirštų. Jų **grynosiosios strategijos** $S_{A} = S_{B} = \left\{ 1,2,3,4,5 \right\}$, iš viso $5 \times 5 = 25$ skirtingi strateginiai profiliai. \
+
+Abu žaidėjai pasirenka pirštų skaičių vienu metu.
+
+**Informacija** \
+Jei bendras pirštų skaičius yra lyginis, Alisa laimi monetą ($\pi_{A} = 1$) \
+Jei bendras pirštų skaičius yra nelyginis, Bazilis laimi monetą ($\pi_{B} = 1$) \
+Pralaimėjusio lošėjo išlošis ($\pi_{i} = -1$).
+
+```{r}
+# Apibrėžiami žaidėjai ir strategijos
+players <- c("Alisa", "Bazilio")
+s1 <- as.character(1:5)  # Alisos strategija (nuo 1 iki 5)
+s2 <- as.character(1:5)  # Bazilio strategija (nuo 1 iki 5)
+
+# Sukuriamas išlošių vektoriai
+payoffs1 <- c()
+payoffs2 <- c()
+
+for (a in 1:5) {
+  for (b in 1:5) {
+    sum <- a + b
+    if (sum %% 2 == 0) { # Lyginė suma - Alisa laimi
+      payoffs1 <- c(payoffs1, 1)
+      payoffs2 <- c(payoffs2, -1)
+    } else { # Nelyginė suma - Bazilio laimi
+      payoffs1 <- c(payoffs1, -1)
+      payoffs2 <- c(payoffs2, 1)
+    }
+  }
+}
+```
+
+Normalios (strateginės) formos lošimą patogu pateikti lentele (matrica). \
+(**A**)lisos strategijos – eilutės, (**B**)azilio – stulpeliai. \
+Lentelė pateikiama žemiau:
+
+```{r}
+# Normalios formos lošimas
+game1 <- normal_form(
+  players = players,
+  s1 = s1,
+  s2 = s2,
+  payoffs1 = payoffs1,
+  payoffs2 = payoffs2
+)
+
+# Nash pusiausvyra
+sol1 <- solve_nfg(game1, show_table = FALSE)
+sol1_table <- sol1$table
+sol1_table <- gsub("strategy", "Strategija", sol1_table)
+sol1_table <- gsub("([0-9-]+)\\^", "<u>\\1</u>", sol1_table)  # pabraukiame vietoj ^
+sol1_table <- gsub("<b>([0-9])</b>", "\\1", sol1_table) 
+
+sol1_table
+
+```
+Strategijas galima susiaurinti iki vieno pološimio. Jei **sutampa lyginis** - Bazilio **laimės**, jei **nesutampa - pralaimės**.
+
+
+**Išlošiai** \
+Pavyzdžiui, jei Alisa pasirenka 1-ą pirštą, o Bazilio - 2-u pirštus, bendra suma yra 3-ys (nelyginė suma), todėl Bazilio laimi, tuomet išlošių vektorius: $(-1, 1)$ \
+Alisos išlošiai: \
+$\pi_A(1, 1) = 1$,
+$\pi_A(1, 2) = -1$,
+$\pi_A(1, 3) = 1$,
+$\pi_A(1, 4) = -1$,
+$\pi_A(1, 5) = 1$,
+
+$\pi_A(2, 1) = -1$,
+$\pi_A(2, 2) = 1$,
+$\pi_A(2, 3) = -1$,
+$\pi_A(2, 4) = 1$,
+$\pi_A(2, 5) = -1$, 
+
+$\pi_A(3, 1) = 1$,
+$\pi_A(3, 2) = -1$, 
+$\pi_A(3, 3) = 1$,
+$\pi_A(3, 4) = -1$, 
+$\pi_A(3, 5) = 1$, 
+
+$\pi_A(4, 1) = -1$,
+$\pi_A(4, 2) = 1$,
+$\pi_A(4, 3) = -1$,
+$\pi_A(4, 4) = 1$,
+$\pi_A(4, 5) = -1$,
+
+$\pi_A(5, 1) = 1$,
+$\pi_A(5, 2) = -1$,
+$\pi_A(5, 3) = 1$,
+$\pi_A(5, 4) = -1$,
+$\pi_A(5, 5) = 1$.
+
+Atitinkamai Bazilio išlošiai: \
+$\pi_A(1, 1) = -1$,
+$\pi_A(1, 2) = 1$,
+$\pi_A(1, 3) = -1$,
+$\pi_A(1, 4) = 1$,
+$\pi_A(1, 5) = -1$, \
+---------------------------------------------------------------------------- ----------------------------------------------------------- \
+---------------------------------------------------------------------------- -----------------------------------------------------------\
+$\pi_A(5, 1) = -1$,
+$\pi_A(5, 2) = 1$,
+$\pi_A(5, 3) = -1$,
+$\pi_A(5, 4) = 1$,
+$\pi_A(5, 5) = -1$.
+
+Pateiktas lošimas yra antagonistinis lošimas, nėra Nash pusiausvyros grynosiomis strategijomis.
+
+### Strateginės formos lošimas mišriosiomis strategijomis
+
+Jei žaidėjas visada renkasi tą pačią strategiją, priešininkas gali laimėti žaidimą. Reikalingos mišriosios strategijos.
+
+> Strateginės formos lošimas grynosiomis strategijomis dažnai neturi sprendimo, todėl reikalingas mišrusis plėtinys. Lošimas **mišriosiomis strategijomis**: \
+$G_{N} =\left\{ \mathcal{N}, \left\{ \Sigma_{i} \right\}_{i\in \mathcal{N}}, \left\{ \pi_{i}\left( \cdot  \right) \right\}_{i\in \mathcal{N}} \right\}$, \
+čia \
+$\mathcal{N} = \left\{[0],1,2,\ldots,n \right\}$ yra lošėjų aibė, \
+$\Sigma_{i}$ yra mišriųjų strategijų aibė, \
+$\pi_{i}: \Sigma \to \mathbb{R}$ yra išlošiai.
+
+Alisa ir Bazilio pasirenka nuo vieno iki penkių pirštų su vienoda tikimybe (0,2 kiekvienam).
+
+Dviejų asmenų lošimas mišriosiomis strategijomis \(\tilde{G_N} = \left\{ \left\{ 1,2 \right\}, \left\{ {\Sigma_{A}, \Sigma_{B}} \right\}, \left\{ \tilde{\pi}_{A}, \tilde{\pi}_{B} \right\} \right\}\) yra nulinės sumos, jei \(\tilde{\pi}_{A}(\sigma)+\tilde{\pi}_{B}(\sigma)=0, \forall \sigma\in \Sigma\).
+
+\(\tilde{\pi}_{A}(\sigma_A, \sigma_B) = -\tilde{\pi}_{B}(\sigma_A, \sigma_B) = \sigma^{T}_{A}A\sigma_{B} \Rightarrow \) pirmas lošėjas siekia maksimizuoti išlošius, kuomet antras siekia minimizuoti nuostolius.
+
+
+```{r}
+# Žaidėjai ir strategijos
+players <- c("Alisa", "Bazilio")
+s1 <- 1:5
+s2 <- 1:5
+
+# Apibrėžiame matricą
+payoffs1 <- matrix(
+  c( 1, -1,  1, -1,  1,
+    -1,  1, -1,  1, -1,
+     1, -1,  1, -1,  1,
+    -1,  1, -1,  1, -1,
+     1, -1,  1, -1,  1),
+  nrow = 5, byrow = TRUE
+)
+
+payoffs2 <- -payoffs1
+
+# Sukuriame funkciją minimax analizei
+minmax_analysis <- function(payoffs1, payoffs2) {
+  # Alisos minimali maksimali išmoka
+  minmax_alisa <- apply(payoffs1, 1, min)
+  # Bazilio minimali maksimali išmoka
+  minmax_bazilio <- apply(payoffs2, 2, min)
+  
+  # Maksimali minimali reikšmė (žaidėjo sprendimas)
+  maxmin_alisa <- max(minmax_alisa)
+  maxmin_bazilio <- max(minmax_bazilio)
+  
+  list(
+    minmax_alisa = minmax_alisa,
+    minmax_bazilio = minmax_bazilio,
+    maxmin_alisa = maxmin_alisa,
+    maxmin_bazilio = maxmin_bazilio
+  )
+}
+
+
+result <- minmax_analysis(payoffs1, payoffs2)
+
+cat("Alisos minmax strategija (minimalūs maksimumai eilutėse):\n")
+print(result$minmax_alisa)
+cat("Bazilio minmax strategija (minimalūs maksimumai stulpeliuose):\n")
+print(result$minmax_bazilio)
+cat("\nAlisos maksimali minimali išmoka:", result$maxmin_alisa, "\n")
+cat("Bazilio maksimali minimali išmoka:", result$maxmin_bazilio, "\n")
+```
+
+
+
+## Monetos metimas
+> Monetos metimas yra antagonistinis (nulinės sumos) lošimas.
+Monetos metimas yra vienas iš pavyzdžių, kuomet Nash (N.P.) pusiausvyros aibė yra $\emptyset$, t. y. N.P. grynosiomis strategijomis nėra, todėl reikalingas mišrusis plėtinys.
+
+Nagrinėkime monetos metimą (arba lyginis / nelyginis). Bazilio pasirenka Herbą arba Skaičių, o Alisa bando atspėti:
+
+```{r}
+game2 <- normal_form(
+  players = c("Alisa", "Bazilio"),
+  s1 = c("H", "S"), 
+  s2 = c("H", "S"), 
+  payoffs1 = c(1, -1, -1, 1),
+  payoffs2 = c(-1, 1, 1, -1))
+
+sol2 <- solve_nfg(game2, show_table = FALSE)
+sol2_table <- sol2$table
+sol2_table <- gsub("strategy", "Strategija", sol2_table)
+sol2_table <- gsub("([0-9-]+)\\^", "<u>\\1</u>", sol2_table)
+sol2_table <- gsub("<b>([0-9])</b>", "\\1", sol2_table) 
+
+sol2_table
+```
+
+### Strateginės formos lošimas mišriosiomis strategijomis
+
+> Strateginės formos lošimas grynosiomis strategijomis dažnai neturi sprendimo, todėl reikalingas mišrusis plėtinys. Lošimas **mišriosiomis strategijomis**: \
+$G_{N} =\left\{ \mathcal{N}, \left\{ \Sigma_{i} \right\}_{i\in \mathcal{N}}, \left\{ \pi_{i}\left( \cdot  \right) \right\}_{i\in \mathcal{N}} \right\}$, \
+čia \
+$\mathcal{N} = \left\{[0],1,2,\ldots,n \right\}$ yra lošėjų aibė, \
+$\Sigma_{i}$ yra mišriųjų strategijų aibė, \
+$\pi_{i}: \Sigma \to \mathbb{R}$ yra išlošiai.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(knitr)
+library(kableExtra)
+
+data <- data.frame(
+  Alisa_Bazilio = c("H", "S", "", ""),
+  H = c("1 -1", "-1 1", "p", ""),
+  S = c("-1 1", "1 -1", "1-p", ""), 
+  ` ` = c("q", "1-q", "", "")
+)
+
+kable(data, caption = "", row.names = FALSE, escape = FALSE) %>%
+  kable_styling(latex_options = "hold_position")
+```
+
+$\rho_{A}: \pi_{A}(H|(p,1-p))\equiv 1 >< \pi_{A}(S|(p,1-p))\equiv 1-2p, \Leftrightarrow p >< \frac{1}{2}$, taigi iš čia:
+
+\begin{equation*}
+    \rho_{A} = 
+    \begin{cases}
+      0, & p < \frac{1}{2},\\
+      [0,1], & p = \frac{1}{2},\\
+      1, & p > \frac{1}{2}
+    \end{cases}
+\end{equation*}
+
+Pagal geriausio atsako funkcijos apibrėžimą, Alisos geriausias atsakas į asimetrinius lūkesčius rinkti didesnę pusę, kitaip gali rinkti atsitiktinai, o Bazilio - atvirkščiai.
+Todėl vienintelė N.P. mišriosiomis strategijomis yra $\sigma{*}_{i}=\left( \frac{1}{2}, \frac{1}{2} \right), i \in \left\{ A,B \right\}$. \
+Iš N.P. gauname, kad $\tilde{\pi_{i}}\left( \sigma^{*} \right) = \nu^{*}=0$
+
+Vaizduojama grafiškai:
+```{r warning=FALSE, message=FALSE}
+library(ggplot2)
+custom_colors <- custom_colors <- c("#9B3950", "#0B0E0A")
+
+sol2$br_plot +
+  scale_color_manual(values = custom_colors)
+```
+Geriausio atsako funkcijų susikirtimo taškai yra Nash pusiausvyros.
+
+## Panašumai ir skirtumai į monetos metimą
+
+### Panašumai
+
+Tiek monetos metimas, tiek "Lyginė ir nelyginė suma" lošimas yra antagonistinis (nulinės sumos) lošimas, simetrinis. Nash pusiausvyra grynosiomis strategijomis neegzistuoja. Vietoj to atsižvelgiama į mišriąsias strategijas.
+
+Lošėjai negali numatyti, kokį pirštų skaičių kitas lošėjas pasirinks, nes jie naudoja mišrią strategiją. Mišrios strategijos naudojimas gali padėti lošėjams optimizuoti savo šansus laimėti, nes jie nebus lengvai nuspėjami.
+
+
+1) Abiejų lošimų, rezultatas yra atsitiktinis. \
+Monetos metimas. Rezultatas yra atsitiktinis (herbas arba skaičius). \
+Lošimas: Lyginė ir nelyginė suma. Rezultatas priklauso nuo dviejų lošėjų pasirinkimų.
+
+2) Dvi baigmės. \
+Monetos metimas. Dvi galimos baigmės (herbas arba skaičius). \
+Lošimas: Lyginė ir nelyginė suma. Dvi galimos baigmės (lyginė suma – laimi Alisa; nelyginė suma – laimi Bazilio).
+
+### Skirtumai
+
+1) Strateginis elementas. \
+Monetos metimas. Rezultatas visiškai atsitiktinis, lošėjai neturi jokios įtakos rezultatui. \
+Lošimas: Lyginė ir nelyginė suma. Rezultatas priklauso nuo lošėjų pasirinkimų, tai yra strateginis žaidimas.
+
+2) Lošėjų įtaka. \
+Monetos metimas. Lošėjai negali kontroliuoti rezultatų, tik stebi. \
+Lošimas: Lyginė ir nelyginė suma. Lošėjai siekia pasinaudoti savo strategijomis (renkasi pirštų skaičių), kad laimėtų daugiau kartų nei kiti.
+
+3) Galimos strategijos. \
+Monetos metimas. Lošėjai neturi galimybių keisti rezultatų. \
+Lošimas: Lyginė ir nelyginė suma. Lošėjai gali naudoti mišrias strategijas ir pasirinkti skirtingus pirštų skaičius, kad darytų įtaką rezultatui ir padidintų išlošį.
+
+
+# 2.7 užduotis. Medianinio rinkėjo teorema
+
+Aloyzas ir Bronius dalyvauja Lietuvos Respublikos 2024 m. Seimo rinkimuose ir varžosi
+dėl Šakių apylinkės rinkėjų, kurių interesai yra tolygiai pasiskirstę intervale $[0, 1]$ nuo visiškai liberalių iki griežtai konservatyvių. Piliečiai balsuoja už artimiausią jiems kandidatą.
+Kandidatai siekia išlošti, nei dalyvauti ir pralaimėti. \
+a) Suformuluokite šį lošimą strateginėje formoje kai $n = 2$ ir raskite jo Nash pusiausvyras. \
+b) Parodykite kad lošimas neturi Nash pusiausvyros kai $n = 3$.
+
+# {.tabset}
+
+## Lošimas, kai $n = 2$
+
+Nurodyto lošimo, naudojant medianinio rinkėjo teoremą (angl. *Median Voter Theorem*) pavyzdys Jungtinėse Amerikos Valstijose: 
+```{r, echo=FALSE, fig.cap="Lošimo, kai n = 2, pavyzdys (adaptuota pagal [1])", out.width = '80%'}
+knitr::include_graphics("Median_Voter_Theorem.png")
+```
+
+Šio lošimo **lošėjai**: Aloyzas ir Bronius, du kandidatai, kurie konkuruoja dėl rinkėjų, t. y. lošėjų aibė $\mathcal{N} = \left\{ A,B \right\}$. \
+
+Rinkėjai yra tolygiai pasiskirstę intervale $[0,1]$, kur 0 reiškia visiškai liberalius, o 
+1 - visiškai konservatyvius rinkėjus.
+
+**Strategijos**: Kiekvienas kandidatas pasirenka poziciją $q_{i} \in \left[ 0,1 \right]$, čia 
+$i\in \left\{ A,B \right\}$, kuri nusako jo politinę poziciją nuo liberalios iki konservatyvios.
+
+**Balsavimo taisyklė**: Kiekvienas rinkėjas balsuoja už artimiausią kandidatą pagal jų politines pažiūras (poziciją).
+
+Kiekvienas kandidatas siekia **maksimizuoti** savo rinkėjų dalį.
+
+Visų pirma, apibrėžkime šio lošimo strateginę formą ir ieškokime Nash pusiausvyros.
+
+Tarkime, pirmojo lošėjo pozicija $q_{A} \in \left[ 0,1 \right]$, antrojo lošėjo pozicija $q_{B} \in \left[ 0,1 \right]$. \
+Tegul $V$ atsitiktinis dydis, kuris yra pozicija atsitiktinai parinkto rinkėjo, turinti tolydžią tankio funkciją $f$.
+
+Tarkime, kad $q_{A} < q_{B}$, tai Aloyzas užima poziciją iš kairės nuo Broniaus. $[q_{A}, q_{B}]$ vidurio taškas yra $\gamma \equiv \frac{q_{A}+q_{B}}{2}$.
+
+Rinkėjai balsuoja už kandidatą, kuris yra arčiausiai jų pačių politinių pažiūrų. Jei Aloyzas ir Bronius pasirenka pozicijas \(q_A\) ir \(q_B\) (kai **\(q_A < q_B\)**), tada:
+
+- Rinkėjai, kurių pozicijos yra intervale nuo \(0\) iki vidurio taško \(\gamma = \frac{q_A + q_B}{2}\), balsuos už Aloyzą. \
+- Rinkėjai, kurių pozicijos yra intervale nuo \(\gamma\) iki \(1\), balsuos už Bronių. \
+Panašiai, jei  **\(q_A\) > \(q_B\)**, kandidatas Aloyzas gauna \mathbb{P}(V > \gamma)\) balsų. \
+Jei **\(q_A\) = \(q_B\)**, rinkėjai bus tolygiai pasiskirstę tarp kandidatų, ir abu kandidatai gautų po 50 \% balsų.
+
+
+Šiuo atveju geriausio atsako funkcijas apibrėšime per integralus, atsižvelgdami į tolygų rinkėjų pasiskirstymą pagal tankio funkciją $f(x)$, kurioje $f(x) > 0$ ir $\int_0^1 f(x) dx = 1$.
+
+- *Aloyzo geriausias atsakas*: Aloyzas gauna rinkėjų balsus nuo \(0\) iki \(\gamma = \frac{q_A + q_B}{2}\), todėl jo geriausias atsakas (nauda) yra:
+
+\[
+u_A(q_A, q_B) = \int_0^{\gamma} f(x) \ dx
+\]
+
+
+
+- *Broniaus geriausias atsakas*: Bronius gauna rinkėjų balsus nuo \(\gamma\) iki \(1\), todėl jo geriausias atsakas (nauda) yra:
+
+\[
+u_B(q_A, q_B) = \int_{\gamma}^1 f(x) \, dx
+\]
+
+
+Aloyzo ir Broniaus **geriausio atsako funkcijos**:
+\begin{equation*}
+u_A(q_A, q_B) = 
+\begin{cases} \frac{q_A + q_B}{2} & \text{jei } q_A < q_B, \\ 
+\frac{1}{2} & \text{jei } q_A = q_B, \\ 
+1 - \frac{q_A + q_B}{2} & \text{jei } q_A > q_B)\,
+\end{cases}
+\end{equation*}
+
+\begin{equation*}
+u_B(q_A, q_B) = 
+\begin{cases} 1 - \frac{q_A + q_B}{2} & \text{jei } q_A < q_B, \\ 
+\frac{1}{2} & \text{jei } q_A = q_B, \\ 
+\frac{q_A + q_B}{2} & \text{jei } q_A > q_B)\,
+\end{cases}
+\end{equation*}
+
+Šios funkcijos parodo rinkėjų pasiskirstymą tarp kandidatų, atsižvelgiant į jų pasirinktas pozicijas ir jų požiūrio artumą rinkėjams.
+
+Nash pusiausvyroje kiekvienas kandidatas pasirenka tokią poziciją, kad nebegali padidinti savo rinkėjų dalies pakeisdamas savo poziciją.
+
+Abu kandidatai nori būti arčiausiai centro, nes tai suteikia jiems didesnę galimybę pritraukti daugiau rinkėjų. Todėl abu kandidatai judės link *rinkėjų pasiskirstymo medianos* taško \(y^*\), kuriame pasiekiama lygi rinkėjų dalis, t. y.:
+
+\[
+\int_0^{y^*} f(x) \, dx = \frac{1}{2}
+\]
+
+Šis taškas \(y^*\) padalija rinkėjus po lygiai, todėl Nash pusiausvyra yra tada, kai abu kandidatai pasirenka \(q_A = q_B = y^*\). Tada kiekvienas kandidatas gauna \(0,5\) naudos, nes jie surenka po pusę rinkėjų balsų.
+
+
+
+## Lošimas, kai $n = 3$
+
+Dažniausiai rinkimuose dalyvauja daugiau nei du kandidatai, panagrinėkime atvejį, kai $n = 3$.
+
+```{r, echo=FALSE, fig.cap="Lošimas, kai n = 3 (adaptuota pagal [2])", out.width = '80%'}
+knitr::include_graphics("Median_Voter_Theorem2.png")
+```
+
+Šio lošimo **lošėjai**: Aloyzas, Bronius ir Česlovas, trys kandidatai, kurie konkuruoja dėl rinkėjų, t. y. lošėjų aibė $\mathcal{N} = \left\{ A,B,C \right\}$. \
+
+**Strategijos**: Dabar panagrinėkime atvejį su trimis kandidatais, kurie pasirenka pozicijas \(q_A\), \(q_B\) ir \(q_C\) intervale $[0,1]$.
+
+**Balsavimo taisyklė**: Kiekvienas rinkėjas balsuoja už artimiausią kandidatą pagal jų politines pažiūras (poziciją).
+
+**Geriausio atsako funkcijos**:
+
+Trys kandidatai bando pasirinkti tokias pozicijas, kurios pritrauktų kuo daugiau rinkėjų. Kiekvienas kandidatas nori būti kuo arčiau kuo daugiau rinkėjų, tačiau dėl trijų kandidatų konkurencijos atsiranda sudėtingesnių strateginių paskatų.
+
+- Kiekvienas rinkėjas balsuos už tą kandidatą, kuris yra jam arčiausiai.
+Todėl intervalas \([0,1]\) pasidalins į tris dalis, priklausomai nuo kandidatų pozicijų.
+
+- Be to, jei dvi pozicijos sutampa, rinkėjai tarp šių kandidatų balsuos tolygiai, tačiau jie gali atimti balsus vienas iš kito.
+
+Šiuo atveju pozicionavimasis tampa sudėtingesnis, nes kiekvienas kandidatas turi paskatą pasislinkti taip, kad „perimtų“ rinkėjus iš kitų kandidatų.
+
+Tarkime, pažymime tris kandidatų pozicijas \(q_A, q_B, q_C\), tvarka \(q_A\le q_B\le q_C\). Tokiu atveju,
+
+- Aloyzas gaus rinkėjų balsus intervale \(\left[ 0, \frac{q_A+q_B}{2} \right]\),
+
+- Bronius intervale \(\left[ \frac{q_A+q_B}{2}, \frac{q_B+q_C}{2} \right]\),
+
+- Česlovas intervale \(\left[ \frac{q_B+q_C}{2}, 1  \right]\)
+
+Jei kandidatų pozicijos yra labai arti centro (tarkime, \(q_A  = 0,5 - \epsilon\), \(q_B = 0,5\), \(q_C = 0,5 + \epsilon\)), kiekvienas kandidatas gauna tik dalį balsų.
+
+
+Kai yra trys kandidatai, vidurinis kandidatas, esantis centre (tarkime, ties 0,5), gali prarasti rinkėjus, nes kraštiniai rinkėjai yra arčiau kandidatų, esančių prie kraštų (pvz., ties \(q_A = 0,25\) ir \(q_C = 0,75\)).
+
+Kiekvienas kandidatas gali paslinkti savo poziciją, siekdamas gauti daugiau rinkėjų, kai kiti kandidatai taip pat keičia savo pozicijas. Dėl šios priežasties neįmanoma pasiekti stabilios pusiausvyros, kurioje nė vienas iš trijų kandidatų neturėtų paskatos keisti savo pozicijos.
+
+Jei visi kandidatai susitelks ties centru (0,5), jie pritrauks rinkėjus tolygiai,  pavyzdžiui, \(q_A = 0,25\), \(q_B = 0,5\), ir \(q_C = 0,75\), tačiau kiekvienas kandidatas galės padidinti savo balsų dalį pasistūmėjęs į kraštą. \ 
+Kiekvieno kandidato sprendimai priklauso nuo kitų dviejų pozicijų. Dėl to **Nash pusiausvyros nėra**.
+
+
+
+# 3.4 užduotis. Nuoseklioji pusiausvyra
+Parodykite, kad (*B,b,V*) yra vienintelė nuoseklioji pusiausvyra tokiame trijų lošėjų lošime:
+
+```{r, echo=FALSE, fig.cap="Trijų lošėjų lošimas", out.width = '100%'}
+knitr::include_graphics("Uzduotis_3_4.png")
+```
+
+
+> **Nuosekliosios pusiausvyros apibrėžimas**.
+Strateginis profilis \(\gamma^* = (\gamma_1^*, \dots, \gamma_n^*)\) yra nuoseklioji pusiausvyra lošime \(\Gamma\), jei egzistuoja lūkesčių sistema \(\mu^*\), tokia, kad: \
+1. \((\mu^*, \gamma^*)\) yra pagrįstas vertinimas. \
+2. Kiekvienam žaidėjui \(i\), kiekviename informacijos rinkinyje \(h \in H_i\), strategija \(\gamma_i^*\) yra optimali, atsižvelgiant į lūkesčius \(\mu^*(x)\) ir kitų lošėjų strategijas \(\gamma_{-i}\).
+Tai reiškia, kad kiekvienam \(h \in H_i\) ir bet kuriai alternatyviai strategijai \(\gamma_i' \in \Psi_i\):
+\[
+\pi_i(\gamma_i^* | \mu^*, h) \geq \pi_i(\gamma_i' | \mu^*, h),
+\]
+kur \(\pi_i(\gamma_i | \mu^*, h)\) reiškia laukiamą \(i\)-ojo lošėjo naudą, kai jis naudoja strategiją \(\gamma_i\), esant lūkesčiams \(\mu^*\) informacijos rinkinyje \(h\).
+
+### 1. \((A, b, U)\) nėra nuoseklioji pusiausvyra
+Parodysime, ar \((A, b, U)\) galėtų būti nuoseklioji pusiausvyra:
+
+1. **Lošėjo 1** pasirinkimas (A arba B): Jei Lošėjas 1 pasirenka \(A\), vėlesni veiksmai priklauso nuo Lošėjų 2 ir 3.
+2. **Lošėjo 2** pasirinkimas (a arba b): Tuomet Lošėjas 2 renkasi tarp \(a\) ir \(b\). Pasirinkus \(b\), rezultatas yra \((0, 1, 0)\), o pasirinkus \(a\), lošimas pereina į Lošėjo 3 sprendimo tašką.
+3. **Lošėjo 3** pasirinkimas (U arba V): Kai Lošėjas 3 pasirenka \(U\), rezultatas yra \((0, 0, 1)\); pasirinkus \(V\) gaunama \((2, 2, 2)\).
+
+Kadangi rezultatas \((2, 2, 2)\) yra geriausias visiems žaidėjams, jie gali laikyti šį profilį kaip Nash pusiausvyrą. Tačiau reikia patikrinti, ar šis profilis atitinka *nuosekliosios pusiausvyros* reikalavimus, kas apima lūkesčių nuoseklumą ir racionalumą kiekviename sprendimo taške.
+
+Kad atitiktų nuosekliosios pusiausvyros sąlygą, lūkesčiai turi būti suderinami su Bajeso taisykle visur, kur ji taikoma. Lūkesčiai \(\mu\) turi būti formuojami ir atnaujinami pagal Bajeso taisyklę keliais, kurie yra suderinami su lošėjų strategijomis.
+
+1. *Lūkesčiai*. Kad \((A, b, U)\) būtų nuosekli, Lošėjas 3 turėtų turėti tokią lūkesčių sistemą \(\mu\), kuri leistų \(U\) būti racionaliam pasirinkimui. Tačiau, atsižvelgiant į žaidimo struktūrą, Lošėjas 3 turi paskatų rinktis \(V\) vietoj \(U\), nes \(V\) lemia didesnį naudos dydį \((2, 2, 2)\).
+
+2. *\((A, b, U)\) Nenuoseklumas:* Lūkesčiai, būtini tam, kad \((A, b, U)\) būtų nuosekli, nėra suderinami su racionaliu elgesiu. Lošėjas 3 nukryptų į \(V\), todėl būtų nenuoseklumas.
+
+### 2. \((B, b, V)\) yra nuoseklioji pusiausvyra
+Parodysime, kad strateginis profilis \((B, b, V) ~ (0,1,0), (0,1), (0,1)\) yra nuoseklioji pusiausvyra.
+
+```{r, echo=FALSE, fig.cap="Trijų lošėjų lošimas", out.width = '85%'}
+knitr::include_graphics("Uzduotis_3_4_sprendimas.png")
+```
+
+1. **Lošėjo 1** pasirinkimas \(B\): Pasirinkus \(B\), patenkama į lošėjo informacinę aibę, lošimas pasiekia informacijos rinkinį, kuriame Lošėjas 2 turi rinktis tarp strategijos \(a\) ir \(b\).
+2. **Lošėjo 2** pasirinkimas \(b\): Pasirinkus \(b\), lošimas pereina į trečiojo lošėjo (Lošėjas 3) sprendimo tašką ($x_{31}$, $x_{32}$), leidžiant Lošėjui 3 rinktis tarp \(U\) ir \(V\).
+3. **Lošėjo 3** pasirinkimas \(V\): Atsižvelgiant į lūkesčius \(\mu\), suderintus su Bajeso taisykle, Lošėjas 3 supranta, kad \(V\) suteikia didžiausią išlošį, kai \(V = (2, 2, 2)\). Todėl \(V\) yra racionalus Lošėjo 3 pasirinkimas.
+
+Iš to išplaukia, kad:
+
+- Tikėtini išlošiai \(\pi_i\) yra maksimizuoti kiekvienam lošėjui, kai jie renkasi savo strategijas \((B, b, V)\).
+
+- Lūkesčiai \(\mu\) yra nuoseklūs ir racionalūs, atitinkantys nuosekliosios pusiausvyros apibrėžimą.
+
+Šiame lošime (B, b, V) trijų lošėjų strateginis profilis yra STBP (Silpnoji tobuloji Bajeso pusiausvyra).
+
+### Išvada
+Strateginis profilis \((B, b, V)\) atitinka visus nuosekliosios pusiausvyros kriterijus, nes visi lošėjų pasirinkimai yra racionalūs, o lūkesčiai atitinka Bajeso taisyklę. Todėl:
+
+1. *\((A, b, U)\)* neatitinka nuosekliosios racionalumo sąlygos dėl lūkesčių nenuoseklumo.
+\(A,b,U)\) yra STBP su \(\hat{\mu}(x_{31})\ge 2\left( 1- \hat{\mu}(x_{31})\right)\Leftrightarrow \hat{\mu}(x_{31}) \ge \frac{2}{3}\), tačiau tai prieštarauja tam, kad 2-o lošėjo b veiksmas turi būti labiau tikėtinas ir yra apmąstant visus jo išlošius.
+
+2. *\((B, b, V)\)* yra vienintelis profilis, atitinkantis visas nuosekliosios pusiausvyros sąlygas šiame lošime.
+
+
+# Literatūra
+[1] Game Theory and Politics: A Reminder of The Median Voter Theorem. https://www.linkedin.com/pulse/game-theory-politics-reminder-median-voter-theorem-stephen-archer
+
+[2] The Median Voter Model. https://theglitteringeye.com/the-median-voter-model/
+
+[3] Vega-Redondo, Fernando. *Economics and the Theory of Games*. Cambridge university press, 2003.
+
